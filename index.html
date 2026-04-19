@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Planner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#111;min-height:100vh;padding:16px;}
+:root{
+  --bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--bg4:#383838;
+  --acc:#4a7c59;--acc2:#5a9469;--acc-dim:#2d4f38;
+  --txt:#e8e8e8;--txt2:#a0a0a0;--txt3:#666;
+  --bdr:rgba(255,255,255,0.08);--bdr2:rgba(255,255,255,0.13);
+  --r:10px;--r2:6px;
+}
+#app{font-family:inherit;background:var(--bg);border-radius:16px;overflow:hidden;color:var(--txt);max-width:1100px;margin:0 auto;}
+.hdr{background:var(--acc);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
+.hdr-left .eyebrow{font-size:10px;letter-spacing:.12em;opacity:.7;color:white;margin-bottom:4px;}
+.hdr-left .date{font-size:20px;font-weight:500;color:white;}
+.hdr-right{text-align:right;}
+.hdr-right .ey2{font-size:10px;opacity:.7;color:white;margin-bottom:2px;}
+.pct{font-size:32px;font-weight:500;color:white;line-height:1;}
+.pct-sub{font-size:11px;opacity:.65;color:white;margin-top:2px;}
+.body{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);}
+@media(max-width:700px){.body{grid-template-columns:1fr;}}
+.col{padding:18px;border-right:1px solid var(--bdr);}
+.col:last-child{border-right:none;}
+.col-label{font-size:9px;font-weight:500;letter-spacing:.14em;color:var(--txt3);margin-bottom:14px;}
+.input-card{background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);padding:12px;margin-bottom:12px;}
+.inp-row{display:flex;gap:8px;margin-bottom:10px;}
+.inp-row input{flex:1;background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--r2);padding:9px 13px;font-size:13px;color:var(--txt);outline:none;}
+.inp-row input::placeholder{color:var(--txt3);}
+.inp-row input:focus{border-color:var(--acc);}
+.add-btn{background:var(--acc);border:none;border-radius:var(--r2);width:38px;flex-shrink:0;cursor:pointer;font-size:20px;color:white;display:flex;align-items:center;justify-content:center;line-height:1;}
+.add-btn:hover{background:var(--acc2);}
+.chips-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.chip{font-size:11px;padding:4px 11px;border-radius:20px;cursor:pointer;border:1px solid var(--bdr2);color:var(--txt2);background:var(--bg3);white-space:nowrap;transition:all .15s;}
+.chip:hover{color:var(--txt);}
+.chip.sel{color:white;border-color:transparent;}
+.gear-btn{background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--r2);width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--txt2);flex-shrink:0;}
+.gear-btn:hover{color:var(--txt);}
+.fbar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.fchip{font-size:11px;padding:3px 10px;border-radius:20px;cursor:pointer;border:1px solid var(--bdr);color:var(--txt2);background:none;}
+.fchip.on{background:var(--acc-dim);color:#7dba97;border-color:var(--acc-dim);}
+.task{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r2);margin-bottom:4px;border:1px solid var(--bdr);background:var(--bg2);transition:border-color .15s;}
+.task:hover{border-color:var(--bdr2);}
+.task.done{background:var(--acc-dim);border-color:transparent;}
+.task.co{background:var(--bg3);}
+input[type=checkbox]{width:15px;height:15px;accent-color:var(--acc);flex-shrink:0;cursor:pointer;}
+.task-name{flex:1;font-size:13px;font-weight:500;color:var(--txt);cursor:pointer;}
+.task-name:hover{color:#7dba97;}
+.task-name.done{color:var(--txt3);text-decoration:line-through;font-weight:400;}
+.tbadge{font-size:10px;padding:2px 7px;border-radius:20px;flex-shrink:0;}
+.co-badge{background:#3a2a05;color:#fcd34d;font-size:10px;padding:2px 7px;border-radius:4px;flex-shrink:0;}
+.rv-badge{background:var(--acc-dim);color:#7dba97;font-size:10px;padding:2px 7px;border-radius:4px;flex-shrink:0;}
+.del{background:none;border:none;cursor:pointer;color:var(--txt3);font-size:15px;line-height:1;padding:0 2px;opacity:.5;}
+.del:hover{opacity:1;color:var(--txt);}
+.empty{text-align:center;padding:28px 0 16px;color:var(--txt3);font-size:13px;line-height:1.6;}
+.co-info{display:none;margin-top:8px;font-size:11px;color:var(--txt2);padding:6px 10px;background:var(--acc-dim);border-radius:var(--r2);border-left:2px solid var(--acc);}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.cal-nav button{background:none;border:none;cursor:pointer;font-size:18px;color:var(--txt2);padding:2px 8px;line-height:1;}
+.cal-nav button:hover{color:var(--txt);}
+.cal-month{font-size:13px;font-weight:500;color:var(--txt);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cd{text-align:center;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;aspect-ratio:1;color:var(--txt2);}
+.cd:hover{background:var(--bg3);}
+.cd.hd{font-weight:500;font-size:10px;color:var(--txt3);cursor:default;}
+.cd.hd:hover{background:none;}
+.cd.today{background:var(--acc);color:white;}
+.cd.alldone{background:var(--acc-dim);color:#7dba97;}
+.cd.partial{background:#1e2e23;color:#5a9469;}
+.cd.sel:not(.today){outline:2px solid var(--acc);}
+.cal-detail{margin-top:10px;min-height:30px;}
+.cal-legend{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;}
+.cal-legend span{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--txt3);}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.rv-sec{margin-bottom:14px;}
+.rv-sec-label{font-size:10px;font-weight:500;color:var(--acc2);letter-spacing:.06em;margin-bottom:5px;}
+.rv-item{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);margin-bottom:3px;}
+.rv-name{flex:1;font-size:12px;color:var(--txt);}
+.rv-btn{font-size:10px;background:var(--acc-dim);color:#7dba97;border:none;border-radius:4px;padding:3px 9px;cursor:pointer;flex-shrink:0;}
+.rv-btn:hover{background:var(--acc);color:white;}
+.cat-mgr{background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);overflow:hidden;margin-top:10px;display:none;}
+.cat-mgr-hdr{padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+.cat-mgr-hdr span{font-size:13px;font-weight:500;color:var(--txt);}
+.cat-mgr-hdr button{background:none;border:none;cursor:pointer;font-size:18px;color:var(--txt2);line-height:1;}
+.cat-mgr-body{padding:14px;}
+.cat-list-edit{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.cat-add-row{display:flex;gap:6px;}
+.cat-add-row input{flex:1;background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--r2);padding:7px 11px;font-size:13px;color:var(--txt);outline:none;}
+.cat-add-row input:focus{border-color:var(--acc);}
+.cat-add-row select{background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--r2);padding:7px 10px;font-size:12px;color:var(--txt);outline:none;}
+.cat-add-btn{background:var(--acc);border:none;border-radius:var(--r2);padding:7px 14px;font-size:13px;color:white;cursor:pointer;}
+.note-modal{background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);overflow:hidden;margin-top:12px;display:none;}
+.note-hdr{background:var(--acc);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.note-hdr-left .ey{font-size:10px;opacity:.7;color:white;margin-bottom:2px;}
+.note-hdr-left .ttl{font-size:15px;font-weight:500;color:white;}
+.note-hdr button{background:none;border:none;cursor:pointer;color:white;font-size:20px;opacity:.8;line-height:1;}
+.note-body{padding:16px;}
+.note-body textarea{width:100%;height:220px;background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--r2);padding:10px 12px;font-size:13px;color:var(--txt);line-height:1.7;resize:vertical;outline:none;}
+.note-body textarea:focus{border-color:var(--acc);}
+.note-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+.saved-msg{font-size:12px;color:var(--acc2);opacity:0;transition:opacity .3s;}
+.note-foot-btns{display:flex;gap:8px;}
+.close-btn{background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--r2);padding:6px 14px;font-size:13px;color:var(--txt2);cursor:pointer;}
+.close-btn:hover{color:var(--txt);}
+.save-btn{background:var(--acc);border:none;border-radius:var(--r2);padding:6px 18px;font-size:13px;color:white;cursor:pointer;}
+.save-btn:hover{background:var(--acc2);}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="eyebrow">STUDY PLANNER</div>
+      <div class="date" id="hdr-date"></div>
+    </div>
+    <div class="hdr-right">
+      <div class="ey2">오늘 달성률</div>
+      <div class="pct" id="hdr-pct">–</div>
+      <div class="pct-sub" id="hdr-sub"></div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="col">
+      <div class="col-label">TODAY'S STUDY LIST</div>
+      <div class="input-card">
+        <div class="inp-row">
+          <input id="task-input" type="text" placeholder="학습 키워드 입력 후 Enter" onkeydown="if(event.key==='Enter')addTask()">
+          <button class="add-btn" onclick="addTask()">+</button>
+        </div>
+        <div class="chips-row">
+          <div id="cat-chips" style="display:flex;gap:5px;flex-wrap:wrap;flex:1;"></div>
+          <div class="gear-btn" onclick="toggleCatMgr()">⚙</div>
+        </div>
+      </div>
+      <div class="fbar" id="fbar"></div>
+      <div id="task-list"></div>
+      <div class="co-info" id="co-info"></div>
+    </div>
+
+    <div class="col">
+      <div class="col-label">TIL CALENDAR</div>
+      <div class="cal-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <span class="cal-month" id="cal-month"></span>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-detail" id="cal-detail"></div>
+      <div class="cal-legend">
+        <span><span class="dot" style="background:var(--acc-dim);"></span>완료</span>
+        <span><span class="dot" style="background:#1e2e23;"></span>일부</span>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="col-label">REVIEW REMINDERS</div>
+      <div id="review-list"></div>
+    </div>
+  </div>
+
+  <div class="cat-mgr" id="cat-mgr">
+    <div class="cat-mgr-hdr">
+      <span>카테고리 관리</span>
+      <button onclick="toggleCatMgr()">×</button>
+    </div>
+    <div class="cat-mgr-body">
+      <div class="cat-list-edit" id="cat-list-edit"></div>
+      <div class="cat-add-row">
+        <input id="newcat-name" type="text" placeholder="카테고리 이름" onkeydown="if(event.key==='Enter')addCat()">
+        <select id="newcat-color">
+          <option value="blue">파랑</option>
+          <option value="purple">보라</option>
+          <option value="coral">코랄</option>
+          <option value="amber">황색</option>
+          <option value="teal">청록</option>
+          <option value="pink">핑크</option>
+          <option value="red">빨강</option>
+        </select>
+        <button class="cat-add-btn" onclick="addCat()">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-modal" id="note-modal">
+    <div class="note-hdr">
+      <div class="note-hdr-left">
+        <div class="ey">STUDY NOTES</div>
+        <div class="ttl" id="note-title"></div>
+      </div>
+      <button onclick="closeNote()">×</button>
+    </div>
+    <div class="note-body">
+      <textarea id="note-txt" placeholder="공부한 내용 자유롭게 정리...&#10;&#10;핵심 개념, 예제 코드, 헷갈리는 포인트..."></textarea>
+      <div class="note-foot">
+        <span class="saved-msg" id="saved-msg">저장됨</span>
+        <div class="note-foot-btns">
+          <button class="close-btn" onclick="closeNote()">닫기</button>
+          <button class="save-btn" onclick="saveNote()">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS={
+  blue:{bg:'#1e3a5f',text:'#93c5fd'},
+  purple:{bg:'#2d1b69',text:'#c4b5fd'},
+  coral:{bg:'#4a1c0e',text:'#fdba74'},
+  amber:{bg:'#3a2a05',text:'#fcd34d'},
+  teal:{bg:'#064e3b',text:'#6ee7b7'},
+  pink:{bg:'#500724',text:'#f9a8d4'},
+  red:{bg:'#450a0a',text:'#fca5a5'},
+};
+const DEFAULT_CATS=[
+  {id:'c1',name:'코딩테스트',color:'blue'},
+  {id:'c2',name:'DB',color:'amber'},
+  {id:'c3',name:'보안',color:'coral'},
+  {id:'c4',name:'네트워크',color:'teal'},
+  {id:'c5',name:'OS',color:'purple'},
+];
+
+function gLS(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function sLS(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function loadTasks(ds){const v=gLS(`sp:t:${ds}`);return v?JSON.parse(v):[];}
+function saveTasks(ds,arr){sLS(`sp:t:${ds}`,JSON.stringify(arr));}
+function loadCats(){const v=gLS('sp:cats');return v?JSON.parse(v):[...DEFAULT_CATS];}
+function saveCats(){sLS('sp:cats',JSON.stringify(cats));}
+
+let today=new Date(), todayStr=fmt(today);
+let tasks=[], cats=loadCats();
+let selCat=null, filterCat=null;
+let calView=new Date(today.getFullYear(),today.getMonth(),1);
+let calData={}, calDT={}, selDate=null, openId=null;
+
+function fmt(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function parseD(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function dateLabel(d){
+  const DAYS=['일','월','화','수','목','금','토'];
+  const dt=typeof d==='string'?parseD(d):d;
+  return `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 (${DAYS[dt.getDay()]})`;
+}
+
+function doCarryOver(){
+  if(gLS(`sp:co:${todayStr}`)) return;
+  const yest=new Date(today); yest.setDate(yest.getDate()-1);
+  const yt=loadTasks(fmt(yest));
+  const tt=loadTasks(todayStr);
+  const ex=new Set(tt.map(t=>t.title.toLowerCase()));
+  let added=0;
+  for(const t of yt.filter(x=>!x.completed)){
+    if(!ex.has(t.title.toLowerCase())){
+      tt.unshift({id:`co-${Date.now()}-${Math.random().toString(36).slice(2)}`,title:t.title,date:todayStr,completed:false,carryOver:true,catId:t.catId||null});
+      added++;
+    }
+  }
+  saveTasks(todayStr,tt);
+  sLS(`sp:co:${todayStr}`,'1');
+  return added;
+}
+
+function renderCatChips(){
+  document.getElementById('cat-chips').innerHTML=cats.map(c=>{
+    const col=COLORS[c.color]||COLORS.blue;
+    const sel=c.id===selCat;
+    return `<span class="chip${sel?' sel':''}" onclick="selCatFn('${c.id}')" style="${sel?`background:${col.bg};color:${col.text};border-color:${col.bg};`:''}">${c.name}</span>`;
+  }).join('');
+}
+function selCatFn(id){selCat=selCat===id?null:id;renderCatChips();}
+
+function renderFbar(){
+  const used=new Set(tasks.map(t=>t.catId).filter(Boolean));
+  if(!used.size){document.getElementById('fbar').innerHTML='';return;}
+  let h=`<span class="fchip${filterCat===null?' on':''}" onclick="setFilter(null)">전체</span>`;
+  h+=cats.filter(c=>used.has(c.id)).map(c=>{
+    const col=COLORS[c.color]||COLORS.blue;
+    const on=filterCat===c.id;
+    return `<span class="fchip${on?' on':''}" onclick="setFilter('${c.id}')" style="${on?`background:${col.bg};color:${col.text};border-color:${col.bg};`:''}">${c.name}</span>`;
+  }).join('');
+  document.getElementById('fbar').innerHTML=h;
+}
+function setFilter(id){filterCat=id;renderTasks();renderFbar();}
+
+function renderTasks(){
+  const list=document.getElementById('task-list');
+  const arr=filterCat?tasks.filter(t=>t.catId===filterCat):tasks;
+  if(!arr.length){list.innerHTML=`<div class="empty">${filterCat?'해당 카테고리 없음':'오늘의 학습 목록을 추가하세요'}</div>`;updatePct();return;}
+  list.innerHTML=arr.map(t=>{
+    const cat=cats.find(c=>c.id===t.catId);
+    const col=cat?(COLORS[cat.color]||COLORS.blue):null;
+    return `<div class="task${t.completed?' done':''}${t.carryOver?' co':''}">
+      <input type="checkbox" ${t.completed?'checked':''} onchange="toggleTask('${t.id}')">
+      ${cat?`<span class="tbadge" style="background:${col.bg};color:${col.text};">${cat.name}</span>`:''}
+      <span class="task-name${t.completed?' done':''}" onclick="openNote('${t.id}')">${t.title}</span>
+      ${t.carryOver?`<span class="co-badge">이월</span>`:''}
+      ${t.isReview?`<span class="rv-badge">복습</span>`:''}
+      <button class="del" onclick="delTask('${t.id}')">×</button>
+    </div>`;
+  }).join('');
+  updatePct();
+}
+function updatePct(){
+  const tot=tasks.length,done=tasks.filter(t=>t.completed).length;
+  document.getElementById('hdr-pct').textContent=tot?`${Math.round(done/tot*100)}%`:'–';
+  document.getElementById('hdr-sub').textContent=tot?`${done} / ${tot} 완료`:'';
+}
+
+function addTask(){
+  const inp=document.getElementById('task-input'),title=inp.value.trim();if(!title)return;
+  tasks.push({id:`t-${Date.now()}`,title,date:todayStr,completed:false,carryOver:false,catId:selCat||null});
+  saveTasks(todayStr,tasks);inp.value='';
+  renderTasks();renderFbar();loadCalData();renderCalendar();
+}
+function toggleTask(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  t.completed=!t.completed;saveTasks(todayStr,tasks);
+  renderTasks();loadCalData();renderCalendar();
+}
+function delTask(id){
+  tasks=tasks.filter(x=>x.id!==id);saveTasks(todayStr,tasks);
+  renderTasks();renderFbar();loadCalData();renderCalendar();
+}
+
+function toggleCatMgr(){const el=document.getElementById('cat-mgr');el.style.display=el.style.display==='block'?'none':'block';renderCatListEdit();}
+function renderCatListEdit(){
+  document.getElementById('cat-list-edit').innerHTML=cats.map(c=>{
+    const col=COLORS[c.color]||COLORS.blue;
+    return `<span style="display:inline-flex;align-items:center;gap:5px;background:${col.bg};color:${col.text};font-size:12px;padding:4px 10px;border-radius:20px;">
+      ${c.name}<span onclick="rmCat('${c.id}')" style="cursor:pointer;opacity:.7;font-size:13px;line-height:1;">×</span>
+    </span>`;
+  }).join('');
+}
+function addCat(){
+  const name=document.getElementById('newcat-name').value.trim(),color=document.getElementById('newcat-color').value;
+  if(!name)return;
+  cats.push({id:`cat-${Date.now()}`,name,color});saveCats();
+  document.getElementById('newcat-name').value='';
+  renderCatChips();renderCatListEdit();renderFbar();
+}
+function rmCat(id){
+  cats=cats.filter(c=>c.id!==id);if(selCat===id)selCat=null;if(filterCat===id)filterCat=null;
+  saveCats();renderCatChips();renderCatListEdit();renderFbar();renderTasks();
+}
+
+function openNote(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  openId=id;document.getElementById('note-title').textContent=t.title;
+  const v=gLS(`sp:note:${id}`);document.getElementById('note-txt').value=v||'';
+  document.getElementById('saved-msg').style.opacity='0';
+  document.getElementById('note-modal').style.display='block';
+  document.getElementById('note-txt').focus();
+}
+function closeNote(){document.getElementById('note-modal').style.display='none';openId=null;}
+function saveNote(){
+  if(!openId)return;sLS(`sp:note:${openId}`,document.getElementById('note-txt').value);
+  const el=document.getElementById('saved-msg');el.style.opacity='1';setTimeout(()=>{el.style.opacity='0';},1800);
+}
+
+function loadCalData(){
+  const y=calView.getFullYear(),m=calView.getMonth();
+  calData={};calDT={};
+  for(let d=1;d<=31;d++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const v=gLS(`sp:t:${ds}`);
+    if(v){const arr=JSON.parse(v);if(arr.length){calDT[ds]=arr;calData[ds]={total:arr.length,completed:arr.filter(t=>t.completed).length};}}
+  }
+}
+function renderCalendar(){
+  const y=calView.getFullYear(),m=calView.getMonth();
+  document.getElementById('cal-month').textContent=`${y}년 ${m+1}월`;
+  const DOW=['M','T','W','T','F','S','S'];
+  let h=DOW.map(d=>`<div class="cd hd">${d}</div>`).join('');
+  const fd=new Date(y,m,1).getDay(),off=fd===0?6:fd-1,dim=new Date(y,m+1,0).getDate();
+  for(let i=0;i<off;i++)h+=`<div></div>`;
+  for(let d=1;d<=dim;d++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isT=ds===todayStr,info=calData[ds];
+    const allD=info&&info.total>0&&info.completed===info.total;
+    const part=info&&info.completed>0&&!allD;
+    const isSel=ds===selDate;
+    let cls='cd';
+    if(isT)cls+=' today';else if(allD)cls+=' alldone';else if(part)cls+=' partial';
+    if(isSel)cls+=' sel';
+    h+=`<div class="${cls}" onclick="selCal('${ds}')">${d}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=h;
+  renderCalDetail();
+}
+function selCal(ds){selDate=selDate===ds?null:ds;renderCalendar();}
+function renderCalDetail(){
+  const el=document.getElementById('cal-detail');
+  if(!selDate){el.innerHTML='';return;}
+  const arr=calDT[selDate]||[];
+  if(!arr.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3);">${selDate} — 기록 없음</div>`;return;}
+  const done=arr.filter(t=>t.completed),nd=arr.filter(t=>!t.completed);
+  let h=`<div style="font-size:10px;color:var(--txt3);margin-bottom:5px;">${selDate}</div>`;
+  h+=done.map(t=>{
+    const cat=cats.find(c=>c.id===t.catId);const col=cat?(COLORS[cat.color]||COLORS.blue):null;
+    return `<div style="font-size:12px;color:#7dba97;margin:2px 0;display:flex;align-items:center;gap:5px;">✓ ${t.title}${cat?`<span style="font-size:10px;padding:1px 6px;border-radius:20px;background:${col.bg};color:${col.text};">${cat.name}</span>`:''}</div>`;
+  }).join('');
+  h+=nd.map(t=>`<div style="font-size:12px;color:var(--txt3);margin:2px 0;">○ ${t.title}</div>`).join('');
+  el.innerHTML=h;
+}
+function changeMonth(d){calView=new Date(calView.getFullYear(),calView.getMonth()+d,1);loadCalData();renderCalendar();}
+
+function loadReviews(){
+  const intervals=[1,3,7,14,30];
+  const labels={1:'1일 후 복습',3:'3일 후 복습',7:'1주일 후 복습',14:'2주일 후 복습',30:'1달 후 복습'};
+  const revs=[];
+  for(const days of intervals){
+    const d=new Date(today);d.setDate(d.getDate()-days);
+    const arr=loadTasks(fmt(d));
+    const comp=arr.filter(t=>t.completed);
+    if(comp.length)revs.push({ds:fmt(d),days,tasks:comp});
+  }
+  const el=document.getElementById('review-list');
+  if(!revs.length){el.innerHTML=`<div class="empty">복습할 항목이 없어요<br><span style="font-size:11px;">완료 항목이 1·3·7·14·30일 후에 표시됩니다</span></div>`;return;}
+  el.innerHTML=revs.map(r=>`
+    <div class="rv-sec">
+      <div class="rv-sec-label">${labels[r.days]} <span style="opacity:.6;font-weight:400;">(${r.ds})</span></div>
+      ${r.tasks.map(t=>{
+        const cat=cats.find(c=>c.id===t.catId);const col=cat?(COLORS[cat.color]||COLORS.blue):null;
+        return `<div class="rv-item">
+          ${cat?`<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:${col.bg};color:${col.text};flex-shrink:0;">${cat.name}</span>`:''}
+          <span class="rv-name">${t.title}</span>
+          <button class="rv-btn" onclick="addReview('${t.title.replace(/'/g,"\\'")}','${t.catId||''}')">복습</button>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+function addReview(title,catId){
+  const rt=`[복습] ${title}`;
+  if(tasks.some(t=>t.title===rt||t.title===title))return;
+  tasks.push({id:`rv-${Date.now()}`,title:rt,date:todayStr,completed:false,carryOver:false,isReview:true,catId:catId||null});
+  saveTasks(todayStr,tasks);renderTasks();renderFbar();
+}
+
+function init(){
+  document.getElementById('hdr-date').textContent=dateLabel(today);
+  doCarryOver();
+  tasks=loadTasks(todayStr);
+  renderCatChips();renderFbar();renderTasks();
+  const co=tasks.filter(t=>t.carryOver);
+  if(co.length){const el=document.getElementById('co-info');el.style.display='block';el.textContent=`어제 미완료 ${co.length}개 이월됨`;}
+  loadCalData();renderCalendar();loadReviews();
+}
+init();
+</script>
+</body>
+</html>
